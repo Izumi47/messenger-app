@@ -78,6 +78,17 @@ Welcome! You have a complete, private messaging app. Here's what to read in orde
 → ✅ Already configured! Use: https://thrush-close-civet.ngrok-free.app
 → Or read: DEPLOYMENT.md for other methods
 
+---
+
+## 💡 New Features
+
+### Message Management
+Your messenger now includes powerful message management features:
+- **Delete Messages**: Remove individual messages (right-click/long-press)
+- **Batch Operations**: Select multiple messages at once and delete them together
+- **Copy Messages**: Easily copy message text to clipboard
+- **Selection Mode**: Enable multi-select via the ⋮ button in chat header
+
 ### "Want maximum security"
 → Read: DEPLOYMENT.md Method 3 (VPN)
 

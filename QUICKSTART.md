@@ -73,6 +73,22 @@ npm update
 npm audit fix
 ```
 
+### Delete Messages
+
+**Single message:**
+- Desktop: Right-click on message → Copy or Delete
+- Mobile: Long-press (hold) on message → Copy or Delete
+
+**Multiple messages:**
+1. Click the **⋮** (three dots) button in chat header
+2. Checkboxes appear next to all messages
+3. Click checkboxes to select messages
+4. Use toolbar options:
+   - **Select All** - Mark all messages
+   - **Delete** - Remove selected messages (with confirmation)
+   - **Clear** - Unselect all messages
+5. Selection counter shows how many are selected
+
 ### Monitor Server
 While running, you'll see:
 ```

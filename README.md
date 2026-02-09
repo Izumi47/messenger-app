@@ -10,6 +10,8 @@ A completely private, self-hosted messaging application built with Node.js, Expr
 ✅ **Password Security** - Bcrypt hashing for all passwords
 ✅ **One-on-One Chat** - Private conversations between users
 ✅ **Message History** - Full conversation persistence
+✅ **Message Management** - Delete individual or multiple messages at once
+✅ **Message Actions** - Long-press context menu to copy or delete messages
 ✅ **Easy Deployment** - Simple setup for home server or VPS
 ✅ **PWA Notifications** - Works while app is open or in background (closed app requires Web Push)
 

@@ -95,9 +95,16 @@ ngrok http --domain=thrush-close-civet.ngrok-free.app 3000  # Terminal 2
 
 ### Frontend Stack
 - **Vanilla JavaScript** - No framework bloat
-- **HTML/CSS** - UI
+- **HTML/CSS** - UI with responsive design
 - **Socket.io Client** - Real-time updates
-- **LocalStorage** - Session persistence
+- **LocalStorage** - Session and theme persistence
+
+### Key Features
+- **Message Management**: Delete individual messages via context menu
+- **Batch Deletion**: Select multiple messages at once for bulk deletion
+- **Message Actions**: Long-press (mobile) or right-click (desktop) for copy/delete options
+- **Theme Support**: Full dark mode and accessibility options
+- **Real-time Sync**: All actions sync across open browser tabs/devices instantly
 
 ### Database
 - **SQLite3** - `messages.db`

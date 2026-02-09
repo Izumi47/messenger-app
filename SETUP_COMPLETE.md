@@ -85,6 +85,15 @@ http://localhost:3000
 
 ---
 
+## 🎯 Key Features to Try
+
+### Message Management
+- **Delete individual messages**: Right-click (desktop) or long-press (mobile) on a message
+- **Batch delete**: Click the ⋮ button in chat header to enable multi-select mode
+- **Copy messages**: Available in the context menu (right-click or long-press)
+
+---
+
 ## 🎯 Next: Choose Your Path
 
 ### Just Testing Locally?
@@ -148,6 +157,9 @@ That's the only mandatory security setup!
 - ✅ Real-time message updates
 - ✅ User list sidebar
 - ✅ Chat history
+- ✅ Message deletion (individual & batch)
+- ✅ Context menu for message actions (copy, delete)
+- ✅ Dark mode & accessibility options
 - ✅ Session persistence
 - ✅ Mobile-friendly design
 
