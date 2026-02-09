@@ -34,7 +34,7 @@ Your messenger app is now a **full Progressive Web App (PWA)** with:
 ## 📱 How to Use on Mobile
 
 ### Android Users:
-1. Open Chrome: `https://thrush-close-civet.ngrok-free.app`
+1. Open Chrome: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 2. Tap menu (⋮) → **"Install app"**
 3. Tap **"Install"**
 4. App appears on home screen!
@@ -42,7 +42,7 @@ Your messenger app is now a **full Progressive Web App (PWA)** with:
 6. **Done!** Get notifications for messages
 
 ### iPhone Users:
-1. Open Safari: `https://thrush-close-civet.ngrok-free.app`
+1. Open Safari: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 2. Tap Share → **"Add to Home Screen"**
 3. Tap **"Add"**
 4. App appears on home screen!
@@ -89,7 +89,7 @@ Currently using **SVG placeholder icons**. To customize:
 
 2. **Test on Android:**
    - Open Chrome on Android phone
-   - Go to: `https://thrush-close-civet.ngrok-free.app`
+2. Go to: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
    - Install app
    - Send yourself a message
    - See notification ✅
@@ -105,7 +105,7 @@ Currently using **SVG placeholder icons**. To customize:
    - Follow steps in PWA_SETUP.md
 
 5. **Share with friends:**
-   - Send: `https://thrush-close-civet.ngrok-free.app`
+   - Send: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
    - They can install and use immediately!
 
 ---

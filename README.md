@@ -63,7 +63,7 @@ JWT_SECRET=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
 ```bash
 start.bat
 ```
-This automatically opens ngrok tunnel to: `https://thrush-close-civet.ngrok-free.app`
+This automatically opens ngrok tunnel to: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 
 **Manual start**:
 ```bash
@@ -72,21 +72,21 @@ npm start
 
 Then in another terminal:
 ```bash
-ngrok http --domain=thrush-close-civet.ngrok-free.app 3000
+ngrok http --domain=YOUR_NGROK_DOMAIN.ngrok-free.app 3000
 ```
 
 You should see:
 ```
 🔒 Private Messenger Server running on 3000
 📍 Local: http://localhost:3000
-🌐 Remote: https://thrush-close-civet.ngrok-free.app
+🌐 Remote: https://YOUR_NGROK_DOMAIN.ngrok-free.app
 ```
 
 ## Usage
 
 1. **Open in Browser**: 
    - Local: `http://localhost:3000`
-   - Remote: `https://thrush-close-civet.ngrok-free.app`
+   - Remote: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 2. **First Time**:
    - Click "Register"
    - Create username and password
@@ -155,7 +155,7 @@ File location: `./messages.db` (in the app directory)
 ### ✅ Current Setup: Ngrok (Recommended & Active)
 
 This app is configured to use **ngrok** for remote access:
-- Domain: `https://thrush-close-civet.ngrok-free.app`
+- Domain: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 - Automatic HTTPS
 - No port forwarding needed
 - Works behind any firewall/router

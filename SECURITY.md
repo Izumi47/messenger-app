@@ -82,7 +82,7 @@ const ALLOWED_ORIGINS = [
 
 Or set `NGROK_URL` in `.env`:
 ```env
-NGROK_URL=https://your-domain.ngrok-free.app
+NGROK_URL=https://YOUR_NGROK_DOMAIN.ngrok-free.app
 ```
 
 ---
@@ -112,7 +112,7 @@ http://localhost:3000
 
 ### Remote Access (Ngrok)
 ```
-https://thrush-close-civet.ngrok-free.app
+https://YOUR_NGROK_DOMAIN.ngrok-free.app
 ```
 
 ### Same Network

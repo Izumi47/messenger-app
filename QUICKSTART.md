@@ -8,7 +8,7 @@ Double-click: start.bat
 ```
 This starts:
 - ✅ Server on port 3000
-- ✅ Ngrok tunnel to https://thrush-close-civet.ngrok-free.app
+- ✅ Ngrok tunnel to https://YOUR_NGROK_DOMAIN.ngrok-free.app
 
 **macOS/Linux:**
 ```bash
@@ -18,7 +18,7 @@ npm start
 
 **Then open:**
 - Local: http://localhost:3000
-- Remote: https://thrush-close-civet.ngrok-free.app
+- Remote: https://YOUR_NGROK_DOMAIN.ngrok-free.app
 
 ---
 
@@ -26,7 +26,7 @@ npm start
 
 ### ✅ Remote Access (Current - Ngrok)
 ```
-https://thrush-close-civet.ngrok-free.app
+https://YOUR_NGROK_DOMAIN.ngrok-free.app
 ```
 **Works from anywhere!** Automatic HTTPS included.
 

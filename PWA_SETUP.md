@@ -20,7 +20,7 @@ Your messenger app is now a **Progressive Web App (PWA)**! This means it can be 
 
 ### Method 1: Chrome (Easiest)
 
-1. Open Chrome and go to: `https://thrush-close-civet.ngrok-free.app`
+1. Open Chrome and go to: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 2. Tap the **menu** (⋮) at top right
 3. Tap **"Install app"** or **"Add to Home Screen"**
 4. App appears on home screen!
@@ -30,7 +30,7 @@ Your messenger app is now a **Progressive Web App (PWA)**! This means it can be 
 
 ### Method 2: Firefox
 
-1. Open Firefox and go to: `https://thrush-close-civet.ngrok-free.app`
+1. Open Firefox and go to: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 2. Tap the **menu** (≡) at bottom right
 3. Tap **"Install"**
 4. Confirm installation
@@ -42,7 +42,7 @@ Your messenger app is now a **Progressive Web App (PWA)**! This means it can be 
 
 ### iOS (Safari)
 
-1. Open Safari and go to: `https://thrush-close-civet.ngrok-free.app`
+1. Open Safari and go to: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 2. Tap **Share** button (arrow pointing up)
 3. Tap **"Add to Home Screen"**
 4. Give it a name (default: "Private Messenger")
@@ -97,7 +97,7 @@ When someone sends you a message:
 
 You can ALSO access via browser on desktop:
 - **Local:** `http://localhost:3000`
-- **Remote:** `https://thrush-close-civet.ngrok-free.app`
+- **Remote:** `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 
 Both the app (installed) and browser versions sync messages in real-time.
 
@@ -156,7 +156,7 @@ Use one of these free tools:
 ### "Install button not showing"
 
 - ✅ Make sure using **HTTPS** (required for PWA)
-- ✅ Using ngrok (`https://thrush-close-civet.ngrok-free.app`) ✓
+- ✅ Using ngrok with custom domain ✓
 - Your domain is HTTPS ✓
 - Try different browser (Chrome is best supported)
 
@@ -176,7 +176,7 @@ Use one of these free tools:
   - ✅ Safari (iPhone/iPad) - Good support
   - ✅ Edge - Good support
   - ⚠️ Firefox - Limited support
-- Try opening directly: `https://thrush-close-civet.ngrok-free.app`
+- Try opening directly with your ngrok domain
 - Try using "Add to Home Screen" instead of "Install app"
 
 ### "Cached data is old"
@@ -262,7 +262,7 @@ No manual cache clearing needed (automatic).
    - Reinstall app
 
 3. **Share with friends:**
-   - Send them: `https://thrush-close-civet.ngrok-free.app`
+   - Send them your ngrok domain: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
    - They can install and use immediately
 
 ---

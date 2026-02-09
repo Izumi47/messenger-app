@@ -55,7 +55,7 @@ Welcome! You have a complete, private messaging app. Here's what to read in orde
 - [ ] Read BUILD_SUMMARY.md
 - [ ] Run: `start.bat` (auto-starts server + ngrok)
 - [ ] Open local: http://localhost:3000
-- [ ] Open remote: https://thrush-close-civet.ngrok-free.app
+- [ ] Open remote: https://YOUR_NGROK_DOMAIN.ngrok-free.app
 - [ ] Share remote link with friends anywhere!
 - [ ] Read README.md for details
 
@@ -69,13 +69,13 @@ Welcome! You have a complete, private messaging app. Here's what to read in orde
 → Run `start.bat` and open http://localhost:3000
 
 ### "Want to share with friends anywhere"
-→ Run `start.bat` and share: https://thrush-close-civet.ngrok-free.app
+→ Run `start.bat` and share: https://YOUR_NGROK_DOMAIN.ngrok-free.app
 
 ### "Want friends on same WiFi to use it"
 → Read: QUICKSTART.md (section "Same Home WiFi")
 
 ### "Want to use from anywhere"
-→ ✅ Already configured! Use: https://thrush-close-civet.ngrok-free.app
+→ ✅ Already configured with ngrok! Use: https://YOUR_NGROK_DOMAIN.ngrok-free.app
 → Or read: DEPLOYMENT.md for other methods
 
 ---
@@ -162,7 +162,7 @@ Then open: **http://localhost:3000**
 
 **Share with friends anywhere (ngrok)**
 1. Run `start.bat` (auto-starts ngrok tunnel)
-2. Share remote link: https://thrush-close-civet.ngrok-free.app
+2. Share remote link: https://YOUR_NGROK_DOMAIN.ngrok-free.app
 3. Friends can access from anywhere in the world!
 
 **Use on same WiFi only**

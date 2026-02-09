@@ -6,7 +6,7 @@ This guide covers setting up your messenger app for remote access while maintain
 
 **You're already configured with ngrok!**
 
-- **Remote URL:** `https://thrush-close-civet.ngrok-free.app`
+- **Remote URL:** `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 - **Local URL:** `http://localhost:3000`
 - **Auto-start:** Run `start.bat` (Windows) - automatically starts server + ngrok
 - **Manual start:** See "Method 4: Ngrok" below
@@ -18,7 +18,7 @@ This guide covers setting up your messenger app for remote access while maintain
 - ✅ Stable custom domain
 - ✅ Easy setup (one command)
 
-**To use:** Just run `start.bat` and share `https://thrush-close-civet.ngrok-free.app` with anyone!
+**To use:** Just run `start.bat` and share `https://YOUR_NGROK_DOMAIN.ngrok-free.app` with anyone!
 
 **Behavior notes:**
 - Message deletions sync instantly for both users
@@ -261,7 +261,7 @@ Ngrok creates a secure tunnel from the internet to your local server without req
 - ✅ No port forwarding needed
 - ✅ Automatic HTTPS
 - ✅ Works behind any firewall/NAT
-- ✅ Custom domain support (you have: `thrush-close-civet.ngrok-free.app`)
+- ✅ Custom domain support (configure your ngrok domain in `.env`)
 - ✅ Easy setup
 - ✅ Built-in dashboard for monitoring
 
@@ -296,7 +296,7 @@ Server runs on `localhost:3000`
 
 **With your custom domain:**
 ```bash
-ngrok http --domain=thrush-close-civet.ngrok-free.app 3000
+ngrok http --domain=YOUR_NGROK_DOMAIN.ngrok-free.app 3000
 ```
 
 **Or use auto-start:**
@@ -307,7 +307,7 @@ start.bat  # Windows - automatically starts both server and ngrok
 ### Step 5: Access Your App
 
 - **Local:** `http://localhost:3000`
-- **Remote:** `https://thrush-close-civet.ngrok-free.app`
+- **Remote:** `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 
 Share the remote URL with anyone!
 
@@ -333,7 +333,7 @@ Convert ngrok to a Windows service:
 ```bash
 nssm install ngrok
 # Path: C:\path\to\ngrok.exe
-# Arguments: http --domain=thrush-close-civet.ngrok-free.app 3000
+# Arguments: http --domain=YOUR_NGROK_DOMAIN.ngrok-free.app 3000
 ```
 
 ### Ngrok Dashboard

@@ -104,14 +104,17 @@ http://192.168.1.X:3000
 ```
 (Find X with: `ipconfig` on Windows)
 
-### Want to Use from Outside Your Home?
+### Want to Use Ngrok Remote Access?
+✅ Already configured! Run `start.bat` and it will display your ngrok domain URL.
+
+### Want Other Remote Access Methods?
 📖 Read: **DEPLOYMENT.md**
 
 Choose one method:
-1. **Port Forwarding** (simplest) - 15 min setup
-2. **DuckDNS Domain** (best UX) - free domain
-3. **VPN** (most secure) - requires VPN client
-4. **Cloudflare Tunnel** (no port forwarding) - alternative
+1. **Ngrok** (easiest) - Already configured with `start.bat`
+2. **Port Forwarding** (simplest) - 15 min setup
+3. **DuckDNS Domain** (best UX) - free domain
+4. **VPN** (most secure) - requires VPN client
 
 ---
 

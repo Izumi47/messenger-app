@@ -49,7 +49,7 @@ Download: https://nodejs.org/
 
 ### 2. Install ngrok
 Download: https://ngrok.com/download
-Already configured with domain: `thrush-close-civet.ngrok-free.app`
+Already configured with ngrok. Set your domain in `.env` with `NGROK_URL`
 
 ### 3. Go to App Folder
 ```bash
@@ -68,12 +68,12 @@ start.bat  # Windows - Auto-starts both!
 or manually:
 ```bash
 npm start  # Terminal 1
-ngrok http --domain=thrush-close-civet.ngrok-free.app 3000  # Terminal 2
+ngrok http --domain=YOUR_NGROK_DOMAIN.ngrok-free.app 3000  # Terminal 2
 ```
 
 ### 6. Open Browser
 - Local: `http://localhost:3000`
-- Remote: `https://thrush-close-civet.ngrok-free.app`
+- Remote: `https://YOUR_NGROK_DOMAIN.ngrok-free.app`
 
 ### 7. Register & Start Chatting
 - Click "Register"
@@ -179,7 +179,7 @@ ngrok http --domain=thrush-close-civet.ngrok-free.app 3000  # Terminal 2
 
 ### 1. Remote (Ngrok) - ✅ Active & Recommended
 ```
-https://thrush-close-civet.ngrok-free.app
+https://YOUR_NGROK_DOMAIN.ngrok-free.app
 ```
 - Access from **anywhere in the world**
 - Automatic HTTPS (secure)
