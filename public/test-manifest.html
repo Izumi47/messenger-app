@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA Manifest Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h1>PWA Installation Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        // Test 1: Manifest detection
+        const manifestLink = document.querySelector('link[rel="manifest"]');
+        results.innerHTML += `<p><strong>Manifest Link:</strong> ${manifestLink ? 'Found' : 'NOT FOUND'}</p>`;
+        
+        // Test 2: Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then(reg => {
+                results.innerHTML += `<p><strong>Service Worker:</strong> ${reg ? 'Registered ✓' : 'Not registered ✗'}</p>`;
+            });
+        } else {
+            results.innerHTML += `<p><strong>Service Worker:</strong> Not supported</p>`;
+        }
+        
+        // Test 3: Install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            results.innerHTML += `<p><strong>Install Prompt:</strong> Available ✓</p>`;
+            
+            const btn = document.createElement('button');
+            btn.textContent = 'Install PWA Now';
+            btn.style.cssText = 'padding: 20px; font-size: 18px; margin: 20px 0; background: #667eea; color: white; border: none; border-radius: 8px;';
+            btn.onclick = () => {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        results.innerHTML += `<p><strong>User:</strong> Accepted install ✓</p>`;
+                    }
+                    deferredPrompt = null;
+                });
+            };
+            document.body.appendChild(btn);
+        });
+        
+        // Test 4: Display mode
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            results.innerHTML += `<p><strong>Display Mode:</strong> Standalone ✓ (No browser UI)</p>`;
+        } else {
+            results.innerHTML += `<p><strong>Display Mode:</strong> Browser (Has URL bar)</p>`;
+        }
+        
+        // Test 5: HTTPS
+        results.innerHTML += `<p><strong>Protocol:</strong> ${window.location.protocol === 'https:' ? 'HTTPS ✓' : 'HTTP (PWA needs HTTPS)'}</p>`;
+        
+        // Test 6: Fetch manifest
+        fetch('/manifest.json')
+            .then(r => r.json())
+            .then(manifest => {
+                results.innerHTML += `<p><strong>Manifest JSON:</strong> Valid ✓</p>`;
+                results.innerHTML += `<pre>${JSON.stringify(manifest, null, 2)}</pre>`;
+            })
+            .catch(err => {
+                results.innerHTML += `<p><strong>Manifest JSON:</strong> ERROR - ${err.message}</p>`;
+            });
+    </script>
+</body>
+</html>

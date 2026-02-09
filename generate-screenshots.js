@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+
+/**
+ * PWA Screenshot Generator
+ * Creates placeholder screenshots for the PWA manifest
+ * Run: node generate-screenshots.js
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+// 1x1 transparent PNG (minimal valid PNG)
+const transparentPixel = Buffer.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+  0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+  0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
+  0x0d, 0x49, 0x44, 0x41, 0x54, 0x08, 0x99, 0x63, 0xf8, 0xcf, 0xc0, 0x00,
+  0x00, 0x00, 0x03, 0x00, 0x01, 0x6b, 0xb3, 0x37, 0xbb, 0x00, 0x00, 0x00,
+  0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82
+]);
+
+console.log('📸 PWA Screenshot Generator\n');
+
+const publicDir = path.join(__dirname, 'public');
+
+const screenshots = [
+  'screenshot-270.png',
+  'screenshot-1024.png'
+];
+
+screenshots.forEach((screenshot) => {
+  const screenshotPath = path.join(publicDir, screenshot);
+  fs.writeFileSync(screenshotPath, transparentPixel);
+  console.log(`✅ Created ${screenshot}`);
+});
+
+console.log('\n📝 NOTE: These are placeholder screenshots.');
+console.log('For production, provide actual app screenshots:');
+console.log('  • screenshot-270.png (270x540 pixels - mobile)');
+console.log('  • screenshot-1024.png (1024x600 pixels - tablet)\n');

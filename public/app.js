@@ -78,6 +78,11 @@ async function login() {
     token = data.token;
     currentUser = data;
 
+    // Request notification permission for PWA
+    if (typeof window.requestNotificationPermission === 'function') {
+      window.requestNotificationPermission();
+    }
+
     // Initialize socket connection
     initializeSocket();
 
@@ -132,7 +137,34 @@ function initializeSocket() {
     if (data.fromUserId === selectedUserId) {
       displayMessage(data.fromUsername, data.content, 'received');
     }
-    // Refresh unread count or notification here if needed
+    
+    // Send notification for new message (via Service Worker for better PWA support)
+    if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
+      // Show notification if app is not focused or message is from a different conversation
+      const shouldNotify = !document.hasFocus() || data.fromUserId !== selectedUserId;
+      
+      if (shouldNotify) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(`💬 ${data.fromUsername}`, {
+            body: data.content.substring(0, 100),
+            icon: '/icon-192.svg',
+            badge: '/icon-192.svg',
+            tag: `message-${data.fromUserId}`,
+            vibrate: [200, 100, 200],
+            requireInteraction: false,
+            data: {
+              userId: data.fromUserId,
+              username: data.fromUsername,
+              url: '/'
+            },
+            actions: [
+              { action: 'open', title: 'Open' },
+              { action: 'close', title: 'Close' }
+            ]
+          });
+        });
+      }
+    }
   });
 
   socket.on('message-sent', (data) => {
@@ -186,6 +218,11 @@ async function selectUser(userId, username) {
 
   // Show input area
   document.getElementById('inputArea').style.display = 'flex';
+
+  // Close sidebar on mobile after selecting user
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.remove('open');
+  }
 
   // Load messages
   await loadMessages();
@@ -316,7 +353,7 @@ login = async function() {
 
     token = data.token;
     currentUser = data;
-    // updateLocalStorage(); // Disabled - always require login
+    updateLocalStorage(); // Save token for session persistence
 
     initializeSocket();
     document.getElementById('authScreen').classList.add('hidden');
@@ -325,3 +362,22 @@ login = async function() {
     showError('loginError', 'Network error: ' + err.message);
   }
 };
+
+// ==================== MOBILE SIDEBAR TOGGLE ====================
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('open');
+}
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', (event) => {
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('toggleSidebarBtn');
+  
+  if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('open')) {
+    if (!sidebar.contains(event.target) && !toggleBtn.contains(event.target)) {
+      sidebar.classList.remove('open');
+    }
+  }
+});

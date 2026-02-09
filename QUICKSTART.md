@@ -252,6 +252,9 @@ A: Not yet - requires WebRTC setup. Text-only for now.
 **Q: Can I send files/images?**
 A: Not yet - text messages only. Future enhancement.
 
+**Q: Why no notifications when the app is fully closed?**
+A: The current notifications rely on an active WebSocket connection. When you swipe the app away, the connection closes. Full closed-app notifications require Web Push (future enhancement).
+
 **Q: Is my data really private?**
 A: Yes - stored only in messages.db on YOUR server
 

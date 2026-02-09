@@ -270,6 +270,8 @@ Stop server: Press `Ctrl+C` in terminal
 
 Works on phones and tablets!
 
+**Notifications note:** Alerts work while the app is open or in the background. If you swipe the app closed, notifications stop because the WebSocket disconnects. Full closed-app notifications require Web Push (future enhancement).
+
 **Same WiFi:**
 1. Find your PC's local IP: `ipconfig` (Windows)
 2. On phone, visit: `http://192.168.1.X:3000`

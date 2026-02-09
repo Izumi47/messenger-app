@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            margin: 10px 0;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f0f0f0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🔔 Notification Test</h1>
+    
+    <div id="status" class="status"></div>
+    
+    <button onclick="checkPermission()">Check Permission</button>
+    <button onclick="requestPermission()">Request Permission</button>
+    <button onclick="sendTestNotification()">Send Test Notification</button>
+    <button onclick="sendServiceWorkerNotification()">Send SW Notification</button>
+    
+    <a href="/" style="display: inline-block; margin-top: 20px; color: #667eea;">← Back to App</a>
+    
+    <script>
+        const status = document.getElementById('status');
+        
+        function checkPermission() {
+            if ('Notification' in window) {
+                status.className = 'status success';
+                status.innerHTML = `<strong>Permission:</strong> ${Notification.permission}<br>`;
+                status.innerHTML += `<strong>Service Worker:</strong> ${'serviceWorker' in navigator ? 'Supported ✓' : 'Not supported ✗'}`;
+            } else {
+                status.className = 'status error';
+                status.innerHTML = 'Notifications not supported in this browser';
+            }
+        }
+        
+        function requestPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    status.className = permission === 'granted' ? 'status success' : 'status error';
+                    status.innerHTML = `<strong>Permission:</strong> ${permission}`;
+                });
+            } else {
+                status.className = 'status error';
+                status.innerHTML = 'Notifications not supported';
+            }
+        }
+        
+        function sendTestNotification() {
+            if (Notification.permission !== 'granted') {
+                status.className = 'status error';
+                status.innerHTML = 'Permission not granted. Click "Request Permission" first.';
+                return;
+            }
+            
+            const notification = new Notification('Test Notification', {
+                body: 'This is a direct notification test',
+                icon: '/icon-192.svg',
+                badge: '/icon-192.svg',
+                vibrate: [200, 100, 200]
+            });
+            
+            status.className = 'status success';
+            status.innerHTML = 'Direct notification sent! Check your notification tray.';
+        }
+        
+        function sendServiceWorkerNotification() {
+            if (Notification.permission !== 'granted') {
+                status.className = 'status error';
+                status.innerHTML = 'Permission not granted. Click "Request Permission" first.';
+                return;
+            }
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.showNotification('SW Test Notification', {
+                        body: 'This is a Service Worker notification test',
+                        icon: '/icon-192.svg',
+                        badge: '/icon-192.svg',
+                        vibrate: [200, 100, 200],
+                        tag: 'test-notification',
+                        requireInteraction: false,
+                        actions: [
+                            { action: 'open', title: 'Open' },
+                            { action: 'close', title: 'Close' }
+                        ]
+                    });
+                    
+                    status.className = 'status success';
+                    status.innerHTML = 'Service Worker notification sent! Check your notification tray.';
+                });
+            } else {
+                status.className = 'status error';
+                status.innerHTML = 'Service Worker not supported';
+            }
+        }
+        
+        // Auto-check on load
+        checkPermission();
+    </script>
+</body>
+</html>

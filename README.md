@@ -11,6 +11,7 @@ A completely private, self-hosted messaging application built with Node.js, Expr
 ✅ **One-on-One Chat** - Private conversations between users
 ✅ **Message History** - Full conversation persistence
 ✅ **Easy Deployment** - Simple setup for home server or VPS
+✅ **PWA Notifications** - Works while app is open or in background (closed app requires Web Push)
 
 ## System Requirements
 
@@ -338,7 +339,8 @@ Users will see warning (expected with self-signed cert).
 - [ ] File sharing
 - [ ] Voice/video calls (WebRTC)
 - [ ] Message encryption (Signal Protocol)
-- [ ] Mobile apps (React Native)
+- [ ] Native Android/iOS apps (React Native or Flutter)
+- [ ] Web Push for notifications when app is fully closed
 - [ ] User profiles/avatars
 - [ ] Message search
 - [ ] User activity status

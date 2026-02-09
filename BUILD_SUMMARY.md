@@ -232,7 +232,8 @@ http://192.168.1.X:3000
 - ❌ Message reactions/emojis
 - ❌ User profiles/avatars
 - ❌ Voice messages
-- ❌ Mobile app (but works in mobile browser)
+- ❌ Native Android/iOS apps (future)
+- ❌ Web Push for notifications when app is fully closed
 
 ---
 

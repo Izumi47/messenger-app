@@ -173,6 +173,9 @@ A: Yes. All stored in messages.db on YOUR computer. No one else has access.
 **Q: Can it work on my phone?**
 A: Yes! Same home WiFi: http://192.168.1.X:3000
 
+**Q: Will I get notifications if I fully close the app?**
+A: Not with the current setup. Notifications work while the app is open or in the background. Fully closed-app notifications require Web Push (future enhancement).
+
 **Q: Can I use it with family/friends?**
 A: Yes! That's exactly what it's for.
 

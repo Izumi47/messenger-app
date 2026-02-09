@@ -493,6 +493,7 @@ sudo certbot renew            # Renew
 4. **Enable HTTPS** - Encrypt traffic
 5. **Regular backups** - Don't lose messages
 6. **Share domain** with trusted users: `mymessenger.duckdns.org:8000`
+7. **Closed-app notifications** - Implement Web Push (future enhancement)
 
 ---
 

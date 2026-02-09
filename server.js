@@ -20,6 +20,15 @@ const io = socketIo(server, {
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Set correct MIME types for PWA
+app.use((req, res, next) => {
+  if (req.path.endsWith('.json')) {
+    res.type('application/json');
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Environment
@@ -258,9 +267,10 @@ io.on('connection', (socket) => {
 
 // ==================== SERVER ====================
 
-server.listen(PORT, () => {
-  console.log(`\n🔒 Private Messenger Server running on ${PORT}`);
-  console.log(`📍 Access at: http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🔒 Private Messenger Server running on port ${PORT}`);
+  console.log(`📍 Local access: http://localhost:${PORT}`);
+  console.log(`📱 Network access: http://192.168.100.5:${PORT}`);
   console.log(`🔐 Remember to change JWT_SECRET in production!\n`);
 });
 
