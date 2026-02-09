@@ -5,9 +5,41 @@ let selectedUserId = null;
 let token = null;
 let selectionMode = false;
 let selectedMessages = new Set();
+let lastSendTapAt = 0;
 
 // Use the same origin as the page (handles http/https and ports automatically)
 const API_URL = window.location.origin;
+
+// ==================== SERVICE WORKER + NOTIFICATIONS ====================
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+
+  navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`)
+    .then((registration) => {
+      console.log('✅ Service Worker registered:', registration);
+      setInterval(() => {
+        registration.update();
+      }, 3600000);
+    })
+    .catch((error) => {
+      console.error('❌ Service Worker registration failed:', error);
+    });
+}
+
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then((permission) => {
+      if (permission === 'granted') {
+        console.log('✅ Notifications enabled');
+      }
+    }).catch((error) => {
+      console.error('❌ Notification permission error:', error);
+    });
+  }
+}
+
+window.requestNotificationPermission = requestNotificationPermission;
 
 // ==================== THEME ====================
 
@@ -302,9 +334,19 @@ function initializeSocket() {
 
   socket.emit('join', token);
 
+  const removeMessageById = (messageId) => {
+    const messageEl = document.querySelector(`.message[data-message-id="${messageId}"]`);
+    if (!messageEl) return;
+    messageEl.classList.add('deleting');
+    setTimeout(() => {
+      messageEl.remove();
+      updateSelectionCount();
+    }, 300);
+  };
+
   socket.on('new-message', (data) => {
     if (data.fromUserId === selectedUserId) {
-      displayMessage(data.fromUsername, data.content, 'received');
+      displayMessage(data.fromUsername, data.content, 'received', data.timestamp, data.id, false);
     }
     
     // Send notification for new message (via Service Worker for better PWA support)
@@ -337,7 +379,12 @@ function initializeSocket() {
   });
 
   socket.on('message-sent', (data) => {
-    displayMessage('You', data.content, 'sent');
+    displayMessage('You', data.content, 'sent', data.timestamp, data.id, true);
+  });
+
+  socket.on('message-deleted', (data) => {
+    if (!data?.messageId) return;
+    removeMessageById(data.messageId);
   });
 
   socket.on('error', (error) => {
@@ -432,6 +479,7 @@ function displayMessage(sender, content, type = 'received', timestamp = null, me
   const messagesEl = document.getElementById('messages');
   const messageEl = document.createElement('div');
   messageEl.className = `message ${type}`;
+  messageEl.setAttribute('data-can-delete', canDelete ? 'true' : 'false');
   if (messageId) {
     messageEl.setAttribute('data-message-id', messageId);
   }
@@ -439,13 +487,15 @@ function displayMessage(sender, content, type = 'received', timestamp = null, me
   // Checkbox for selection mode
   const checkbox = document.createElement('div');
   checkbox.className = 'message-checkbox';
-  if (selectionMode) {
+  if (selectionMode && canDelete) {
     checkbox.classList.add('visible');
   }
-  checkbox.onclick = (e) => {
-    e.stopPropagation();
-    toggleMessageSelection(messageId, messageEl, checkbox);
-  };
+  if (canDelete) {
+    checkbox.onclick = (e) => {
+      e.stopPropagation();
+      toggleMessageSelection(messageId, messageEl, checkbox);
+    };
+  }
 
   // Wrapper for content
   const wrapper = document.createElement('div');
@@ -596,13 +646,15 @@ function toggleSelectionMode() {
 function updateSelectionMode() {
   const toolbar = document.getElementById('selectionToolbar');
   const modeBtn = document.getElementById('selectionModeBtn');
-  const checkboxes = document.querySelectorAll('.message-checkbox');
+  const messages = document.querySelectorAll('.message');
   
   toolbar.classList.toggle('active', selectionMode);
   modeBtn.style.color = selectionMode ? '#ff6b6b' : '#667eea';
   
-  checkboxes.forEach(cb => {
-    cb.classList.toggle('visible', selectionMode);
+  messages.forEach(msgEl => {
+    const checkbox = msgEl.querySelector('.message-checkbox');
+    const canDelete = msgEl.getAttribute('data-can-delete') === 'true';
+    checkbox.classList.toggle('visible', selectionMode && canDelete);
   });
   
   updateSelectionCount();
@@ -628,8 +680,9 @@ function selectAllMessages() {
   messages.forEach(msgEl => {
     const msgId = msgEl.getAttribute('data-message-id');
     const checkbox = msgEl.querySelector('.message-checkbox');
+    const canDelete = msgEl.getAttribute('data-can-delete') === 'true';
     
-    if (msgId && checkbox.classList.contains('visible')) {
+    if (canDelete && msgId && checkbox.classList.contains('visible')) {
       selectedMessages.add(msgId);
       checkbox.classList.add('checked');
       msgEl.classList.add('selected');
@@ -718,11 +771,23 @@ async function sendMessage() {
     content
   });
 
-  // Display message immediately with placeholder ID (will be replaced when we get the real one via socket)
-  displayMessage('You', content, 'sent', null, null, true);
-
   // Clear input
   input.value = '';
+  input.focus();
+}
+
+function triggerSend(event) {
+  if (event) {
+    event.preventDefault();
+  }
+
+  const now = Date.now();
+  if (now - lastSendTapAt < 400) {
+    return;
+  }
+
+  lastSendTapAt = now;
+  sendMessage();
 }
 
 // ==================== INITIALIZE ====================
@@ -732,9 +797,56 @@ async function sendMessage() {
 window.addEventListener('load', () => {
   initAccessibilityControls();
   initTheme();
+  registerServiceWorker();
   document.querySelectorAll('[data-theme-toggle], #themeToggleBtn').forEach((button) => {
     button.addEventListener('click', toggleTheme);
   });
+
+  const loginBtn = document.getElementById('loginBtn');
+  if (loginBtn) loginBtn.addEventListener('click', login);
+
+  const registerBtn = document.getElementById('registerBtn');
+  if (registerBtn) registerBtn.addEventListener('click', register);
+
+  const showRegisterLink = document.getElementById('showRegisterLink');
+  if (showRegisterLink) showRegisterLink.addEventListener('click', toggleForms);
+
+  const showLoginLink = document.getElementById('showLoginLink');
+  if (showLoginLink) showLoginLink.addEventListener('click', toggleForms);
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+  const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+  if (toggleSidebarBtn) toggleSidebarBtn.addEventListener('click', toggleSidebar);
+
+  const selectionModeBtn = document.getElementById('selectionModeBtn');
+  if (selectionModeBtn) selectionModeBtn.addEventListener('click', toggleSelectionMode);
+
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  if (selectAllBtn) selectAllBtn.addEventListener('click', selectAllMessages);
+
+  const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+  if (deleteSelectedBtn) deleteSelectedBtn.addEventListener('click', deleteSelectedMessages);
+
+  const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+  if (clearSelectionBtn) clearSelectionBtn.addEventListener('click', clearSelection);
+
+  const sendBtn = document.getElementById('sendBtn');
+  if (sendBtn) {
+    sendBtn.addEventListener('click', triggerSend);
+    sendBtn.addEventListener('touchend', triggerSend, { passive: false });
+  }
+
+  const messageInput = document.getElementById('messageInput');
+  if (messageInput) {
+    messageInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+  }
 
   const savedToken = localStorage.getItem('token');
   if (savedToken) {

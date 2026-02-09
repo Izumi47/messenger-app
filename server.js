@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const http = require('http');
 const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
@@ -12,16 +13,84 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
+
+// Trust proxy - required for ngrok X-Forwarded-For header
+// This tells Express to trust the proxy (ngrok) and use X-Forwarded-For for client IP
+app.set('trust proxy', 1);
+
+// Determine allowed origins based on environment
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5000'
+];
+
+// Add ngrok domain if it exists
+if (process.env.NGROK_URL) {
+  ALLOWED_ORIGINS.push(process.env.NGROK_URL);
+}
+
 const io = socketIo(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin: ALLOWED_ORIGINS,
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
+// CORS Configuration
+const corsOptions = {
+  origin: ALLOWED_ORIGINS,
+  credentials: true,
+  methods: ['GET', 'POST', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 3600
+};
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '1mb' }));
+
+// Security Headers
+app.use((req, res, next) => {
+  // HSTS - Force HTTPS in production
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+  
+  // CSP - Content Security Policy
+  res.setHeader('Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.socket.io; connect-src 'self' wss: ws:");
+  
+  // Additional security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  next();
+});
+
+// Rate Limiting
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per window for auth
+  message: 'Too many authentication attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute for general API
+  message: 'Too many requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Don't count WebSocket connections in rate limit
+    return req.headers.upgrade === 'websocket';
+  }
+});
 
 // Set correct MIME types for PWA
 app.use((req, res, next) => {
@@ -185,13 +254,47 @@ async function initializeDatabase() {
 
 // ==================== AUTH ROUTES ====================
 
+// Input validation helper
+const validateUsername = (username) => {
+  if (!username || typeof username !== 'string') {
+    return 'Username is required';
+  }
+  if (username.length < 3 || username.length > 30) {
+    return 'Username must be 3-30 characters long';
+  }
+  if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+    return 'Username can only contain letters, numbers, underscores, and hyphens';
+  }
+  return null;
+};
+
+const validatePassword = (password) => {
+  if (!password || typeof password !== 'string') {
+    return 'Password is required';
+  }
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters long';
+  }
+  if (password.length > 128) {
+    return 'Password must be less than 128 characters';
+  }
+  return null;
+};
+
 // Register
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required' });
+    // Validate input
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      return res.status(400).json({ error: usernameError });
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return res.status(400).json({ error: passwordError });
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
@@ -212,7 +315,7 @@ app.post('/api/register', async (req, res) => {
 });
 
 // Login
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -281,6 +384,9 @@ app.post('/api/push/unsubscribe', verifyToken, async (req, res) => {
 
 // ==================== MESSAGE ROUTES ====================
 
+// Apply rate limiting to all API routes
+app.use('/api/', apiLimiter);
+
 // Get all users
 app.get('/api/users', verifyToken, async (req, res) => {
   try {
@@ -342,7 +448,7 @@ app.delete('/api/messages/:messageId', verifyToken, async (req, res) => {
     const { messageId } = req.params;
     
     // Verify the message belongs to the current user
-    const message = await dbGet('SELECT from_user_id FROM messages WHERE id = ?', [messageId]);
+    const message = await dbGet('SELECT from_user_id, to_user_id FROM messages WHERE id = ?', [messageId]);
     
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
@@ -353,6 +459,11 @@ app.delete('/api/messages/:messageId', verifyToken, async (req, res) => {
     }
     
     await dbRun('DELETE FROM messages WHERE id = ?', [messageId]);
+
+    const payload = { messageId, fromUserId: message.from_user_id, toUserId: message.to_user_id };
+    io.to(`user-${message.from_user_id}`).emit('message-deleted', payload);
+    io.to(`user-${message.to_user_id}`).emit('message-deleted', payload);
+
     res.json({ message: 'Message deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -383,18 +494,22 @@ io.on('connection', (socket) => {
       const { toUserId, content } = data;
 
       // Save to database
-      await dbRun(
+      const result = await dbRun(
         'INSERT INTO messages (from_user_id, to_user_id, content) VALUES (?, ?, ?)',
         [socket.userId, toUserId, content]
       );
 
+      const messageId = result.lastID;
+      const timestamp = new Date().toISOString();
+
       // Send to recipient in real-time
       io.to(`user-${toUserId}`).emit('new-message', {
+        id: messageId,
         fromUserId: socket.userId,
         fromUsername: socket.username,
         toUserId,
         content,
-        timestamp: new Date().toISOString()
+        timestamp
       });
 
       await sendPushToUser(toUserId, {
@@ -411,7 +526,7 @@ io.on('connection', (socket) => {
       });
 
       // Confirm to sender
-      socket.emit('message-sent', { toUserId, content });
+      socket.emit('message-sent', { id: messageId, toUserId, content, timestamp });
     } catch (err) {
       socket.emit('error', err.message);
     }

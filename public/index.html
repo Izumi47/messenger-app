@@ -1106,9 +1106,9 @@
                     <label>Password</label>
                     <input type="password" id="loginPassword" placeholder="Enter password">
                 </div>
-                <button onclick="login()">Login</button>
+                <button id="loginBtn" type="button">Login</button>
                 <div class="toggle-mode">
-                    Don't have account? <a onclick="toggleForms()">Register</a>
+                    Don't have account? <a id="showRegisterLink">Register</a>
                 </div>
                 <div id="loginError" class="error"></div>
             </div>
@@ -1122,9 +1122,9 @@
                     <label>Password</label>
                     <input type="password" id="regPassword" placeholder="Choose password">
                 </div>
-                <button onclick="register()">Register</button>
+                <button id="registerBtn" type="button">Register</button>
                 <div class="toggle-mode">
-                    Already have account? <a onclick="toggleForms()">Login</a>
+                    Already have account? <a id="showLoginLink">Login</a>
                 </div>
                 <div id="regError" class="error"></div>
             </div>
@@ -1138,7 +1138,7 @@
             <div class="sidebar-header">
                 <h2>💬 Users</h2>
                 <div class="sidebar-actions">
-                    <button class="logout-btn" onclick="logout()">Logout</button>
+                    <button class="logout-btn" id="logoutBtn" type="button">Logout</button>
                     <button class="theme-toggle-btn" type="button" data-theme-toggle>🌙</button>
                 </div>
             </div>
@@ -1160,61 +1160,26 @@
         <div class="chat-area">
             <div class="chat-header">
                 <div class="chat-header-left">
-                    <button class="toggle-sidebar-btn" id="toggleSidebarBtn" onclick="toggleSidebar()">☰</button>
+                    <button class="toggle-sidebar-btn" id="toggleSidebarBtn" type="button">☰</button>
                     <h2 id="chatTitle">Select a user to chat</h2>
                 </div>
-                <button class="selection-mode-btn" id="selectionModeBtn" onclick="toggleSelectionMode()" title="Select multiple messages">⋮</button>
+                <button class="selection-mode-btn" id="selectionModeBtn" type="button" title="Select multiple messages">⋮</button>
             </div>
             <div class="selection-toolbar" id="selectionToolbar">
-                <button class="select-all-btn" onclick="selectAllMessages()">Select All</button>
-                <button class="delete-btn" onclick="deleteSelectedMessages()">Delete</button>
-                <button class="clear-btn" onclick="clearSelection()">Clear</button>
+                <button class="select-all-btn" id="selectAllBtn" type="button">Select All</button>
+                <button class="delete-btn" id="deleteSelectedBtn" type="button">Delete</button>
+                <button class="clear-btn" id="clearSelectionBtn" type="button">Clear</button>
                 <span class="selection-count" id="selectionCount">0 selected</span>
             </div>
             <div class="messages" id="messages"></div>
             <div class="input-area" id="inputArea" style="display: none;">
-                <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMessage()">
-                <button class="send-btn" onclick="sendMessage()">Send</button>
+                <input type="text" id="messageInput" placeholder="Type a message...">
+                <button class="send-btn" id="sendBtn" type="button">Send</button>
             </div>
         </div>
     </div>
 
     <script src="app.js"></script>
     
-    <!-- Service Worker Registration -->
-    <script>
-        // Register Service Worker for PWA functionality
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js?v=' + Date.now())
-                    .then((registration) => {
-                        console.log('✅ Service Worker registered:', registration);
-                        // Check for updates periodically
-                        setInterval(() => {
-                            registration.update();
-                        }, 3600000); // Check every hour
-                    })
-                    .catch((error) => {
-                        console.error('❌ Service Worker registration failed:', error);
-                    });
-            });
-        }
-        
-        // Request notification permission when user logs in
-        function requestNotificationPermission() {
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission().then((permission) => {
-                    if (permission === 'granted') {
-                        console.log('✅ Notifications enabled');
-                    }
-                }).catch((error) => {
-                    console.error('❌ Notification permission error:', error);
-                });
-            }
-        }
-        
-        // Make it globally accessible
-        window.requestNotificationPermission = requestNotificationPermission;
-    </script>
 </body>
 </html>
