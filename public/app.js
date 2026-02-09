@@ -3,6 +3,8 @@ let socket = null;
 let currentUser = null;
 let selectedUserId = null;
 let token = null;
+let selectionMode = false;
+let selectedMessages = new Set();
 
 // Use the same origin as the page (handles http/https and ports automatically)
 const API_URL = window.location.origin;
@@ -74,21 +76,6 @@ function applyAccessibilitySettings(settings) {
   if (textSizeSelect) {
     textSizeSelect.value = settings.textSize;
   }
-
-  const reduceMotionToggle = document.getElementById('reduceMotionToggle');
-  if (reduceMotionToggle) {
-    reduceMotionToggle.checked = settings.reduceMotion;
-  }
-
-  const highContrastToggle = document.getElementById('highContrastToggle');
-  if (highContrastToggle) {
-    highContrastToggle.checked = settings.highContrast;
-  }
-
-  const compactModeToggle = document.getElementById('compactModeToggle');
-  if (compactModeToggle) {
-    compactModeToggle.checked = settings.compactMode;
-  }
 }
 
 function initAccessibilityControls() {
@@ -99,33 +86,6 @@ function initAccessibilityControls() {
   if (textSizeSelect) {
     textSizeSelect.addEventListener('change', (event) => {
       settings.textSize = event.target.value;
-      saveAccessibilitySettings(settings);
-      applyAccessibilitySettings(settings);
-    });
-  }
-
-  const reduceMotionToggle = document.getElementById('reduceMotionToggle');
-  if (reduceMotionToggle) {
-    reduceMotionToggle.addEventListener('change', (event) => {
-      settings.reduceMotion = event.target.checked;
-      saveAccessibilitySettings(settings);
-      applyAccessibilitySettings(settings);
-    });
-  }
-
-  const highContrastToggle = document.getElementById('highContrastToggle');
-  if (highContrastToggle) {
-    highContrastToggle.addEventListener('change', (event) => {
-      settings.highContrast = event.target.checked;
-      saveAccessibilitySettings(settings);
-      applyAccessibilitySettings(settings);
-    });
-  }
-
-  const compactModeToggle = document.getElementById('compactModeToggle');
-  if (compactModeToggle) {
-    compactModeToggle.addEventListener('change', (event) => {
-      settings.compactMode = event.target.checked;
       saveAccessibilitySettings(settings);
       applyAccessibilitySettings(settings);
     });
@@ -453,7 +413,9 @@ async function loadMessages() {
         isSent ? 'You' : 'Them',
         msg.content,
         isSent ? 'sent' : 'received',
-        msg.created_at
+        msg.created_at,
+        msg.id,
+        isSent
       );
     });
 
@@ -466,10 +428,28 @@ async function loadMessages() {
 
 // ==================== MESSAGING ====================
 
-function displayMessage(sender, content, type = 'received', timestamp = null) {
+function displayMessage(sender, content, type = 'received', timestamp = null, messageId = null, canDelete = false) {
   const messagesEl = document.getElementById('messages');
   const messageEl = document.createElement('div');
   messageEl.className = `message ${type}`;
+  if (messageId) {
+    messageEl.setAttribute('data-message-id', messageId);
+  }
+
+  // Checkbox for selection mode
+  const checkbox = document.createElement('div');
+  checkbox.className = 'message-checkbox';
+  if (selectionMode) {
+    checkbox.classList.add('visible');
+  }
+  checkbox.onclick = (e) => {
+    e.stopPropagation();
+    toggleMessageSelection(messageId, messageEl, checkbox);
+  };
+
+  // Wrapper for content
+  const wrapper = document.createElement('div');
+  wrapper.className = 'message-wrapper';
 
   const contentEl = document.createElement('div');
   contentEl.className = 'message-content';
@@ -479,12 +459,241 @@ function displayMessage(sender, content, type = 'received', timestamp = null) {
   timeEl.className = 'message-time';
   timeEl.textContent = formatTime(timestamp);
 
-  messageEl.appendChild(contentEl);
-  messageEl.appendChild(timeEl);
+  wrapper.appendChild(contentEl);
+  wrapper.appendChild(timeEl);
+
+  messageEl.appendChild(checkbox);
+  messageEl.appendChild(wrapper);
+
+  // Add long-press context menu for sent messages
+  if (canDelete && messageId) {
+    addMessageContextMenu(contentEl, content, messageId, messageEl);
+  }
+
   messagesEl.appendChild(messageEl);
 
   // Scroll to bottom
   messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addMessageContextMenu(contentEl, messageContent, messageId, messageEl) {
+  let longPressTimer = null;
+  let startX, startY;
+
+  function showContextMenu(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Close any existing context menu
+    closeContextMenu();
+
+    const menu = document.createElement('div');
+    menu.className = 'message-context-menu';
+
+    // Copy button
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = 'Copy';
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(messageContent).then(() => {
+        closeContextMenu();
+      });
+    };
+
+    // Delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.className = 'delete';
+    deleteBtn.onclick = () => {
+      closeContextMenu();
+      deleteMessage(messageId, messageEl);
+    };
+
+    menu.appendChild(copyBtn);
+    menu.appendChild(deleteBtn);
+
+    // Position menu at cursor or touch point
+    let x = e.clientX || e.touches?.[0].clientX || 0;
+    let y = e.clientY || e.touches?.[0].clientY || 0;
+
+    document.body.appendChild(menu);
+    menu.style.left = Math.min(x, window.innerWidth - menu.offsetWidth - 10) + 'px';
+    menu.style.top = Math.min(y, window.innerHeight - menu.offsetHeight - 10) + 'px';
+
+    menu.id = 'activeContextMenu';
+  }
+
+  // Long press for touch
+  contentEl.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    longPressTimer = setTimeout(() => {
+      showContextMenu(e.touches[0]);
+    }, 500);
+  });
+
+  contentEl.addEventListener('touchend', () => {
+    clearTimeout(longPressTimer);
+  });
+
+  contentEl.addEventListener('touchmove', (e) => {
+    const moveX = e.touches[0].clientX;
+    const moveY = e.touches[0].clientY;
+    if (Math.abs(moveX - startX) > 10 || Math.abs(moveY - startY) > 10) {
+      clearTimeout(longPressTimer);
+    }
+  });
+
+  // Right click context menu for desktop
+  contentEl.addEventListener('contextmenu', showContextMenu);
+}
+
+function closeContextMenu() {
+  const existingMenu = document.getElementById('activeContextMenu');
+  if (existingMenu) {
+    existingMenu.remove();
+  }
+}
+
+async function deleteMessage(messageId, messageEl) {
+  try {
+    const response = await fetch(`${API_URL}/api/messages/${messageId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete message');
+    }
+
+    // Fade out and remove
+    messageEl.classList.add('deleting');
+    setTimeout(() => {
+      messageEl.remove();
+    }, 300);
+  } catch (err) {
+    console.error('Error deleting message:', err);
+    alert('Error deleting message');
+  }
+}
+
+// Close context menu when clicking elsewhere
+document.addEventListener('click', closeContextMenu);
+document.addEventListener('contextmenu', (e) => {
+  const menu = document.getElementById('activeContextMenu');
+  if (menu && !menu.contains(e.target)) {
+    closeContextMenu();
+  }
+});
+
+// ==================== MESSAGE SELECTION ====================
+
+function toggleSelectionMode() {
+  selectionMode = !selectionMode;
+  selectedMessages.clear();
+  updateSelectionMode();
+}
+
+function updateSelectionMode() {
+  const toolbar = document.getElementById('selectionToolbar');
+  const modeBtn = document.getElementById('selectionModeBtn');
+  const checkboxes = document.querySelectorAll('.message-checkbox');
+  
+  toolbar.classList.toggle('active', selectionMode);
+  modeBtn.style.color = selectionMode ? '#ff6b6b' : '#667eea';
+  
+  checkboxes.forEach(cb => {
+    cb.classList.toggle('visible', selectionMode);
+  });
+  
+  updateSelectionCount();
+}
+
+function toggleMessageSelection(messageId, messageEl, checkbox) {
+  if (selectedMessages.has(messageId)) {
+    selectedMessages.delete(messageId);
+    checkbox.classList.remove('checked');
+    messageEl.classList.remove('selected');
+  } else {
+    selectedMessages.add(messageId);
+    checkbox.classList.add('checked');
+    messageEl.classList.add('selected');
+  }
+  updateSelectionCount();
+}
+
+function selectAllMessages() {
+  const messages = document.querySelectorAll('.message');
+  selectedMessages.clear();
+  
+  messages.forEach(msgEl => {
+    const msgId = msgEl.getAttribute('data-message-id');
+    const checkbox = msgEl.querySelector('.message-checkbox');
+    
+    if (msgId && checkbox.classList.contains('visible')) {
+      selectedMessages.add(msgId);
+      checkbox.classList.add('checked');
+      msgEl.classList.add('selected');
+    }
+  });
+  
+  updateSelectionCount();
+}
+
+function clearSelection() {
+  const messages = document.querySelectorAll('.message');
+  
+  messages.forEach(msgEl => {
+    const checkbox = msgEl.querySelector('.message-checkbox');
+    checkbox.classList.remove('checked');
+    msgEl.classList.remove('selected');
+  });
+  
+  selectedMessages.clear();
+  updateSelectionCount();
+}
+
+function updateSelectionCount() {
+  const countEl = document.getElementById('selectionCount');
+  countEl.textContent = `${selectedMessages.size} selected`;
+}
+
+async function deleteSelectedMessages() {
+  if (selectedMessages.size === 0) return;
+  
+  const count = selectedMessages.size;
+  if (!confirm(`Delete ${count} message${count > 1 ? 's' : ''}?`)) return;
+  
+  try {
+    const deletePromises = Array.from(selectedMessages).map(msgId => 
+      fetch(`${API_URL}/api/messages/${msgId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+    );
+    
+    const results = await Promise.all(deletePromises);
+    const allSuccess = results.every(r => r.ok);
+    
+    if (allSuccess) {
+      // Remove messages from DOM
+      const messages = document.querySelectorAll('.message');
+      messages.forEach(msgEl => {
+        const msgId = msgEl.getAttribute('data-message-id');
+        if (selectedMessages.has(msgId)) {
+          msgEl.classList.add('deleting');
+          setTimeout(() => msgEl.remove(), 300);
+        }
+      });
+      
+      selectedMessages.clear();
+      updateSelectionCount();
+    } else {
+      throw new Error('Some messages failed to delete');
+    }
+  } catch (err) {
+    console.error('Error deleting messages:', err);
+    alert('Error deleting messages');
+  }
 }
 
 function formatTime(timestamp) {
@@ -508,6 +717,9 @@ async function sendMessage() {
     toUserId: selectedUserId,
     content
   });
+
+  // Display message immediately with placeholder ID (will be replaced when we get the real one via socket)
+  displayMessage('You', content, 'sent', null, null, true);
 
   // Clear input
   input.value = '';

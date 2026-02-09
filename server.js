@@ -336,6 +336,29 @@ app.post('/api/messages', verifyToken, async (req, res) => {
   }
 });
 
+// Delete message
+app.delete('/api/messages/:messageId', verifyToken, async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    
+    // Verify the message belongs to the current user
+    const message = await dbGet('SELECT from_user_id FROM messages WHERE id = ?', [messageId]);
+    
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+    
+    if (message.from_user_id !== req.userId) {
+      return res.status(403).json({ error: 'Cannot delete message sent by another user' });
+    }
+    
+    await dbRun('DELETE FROM messages WHERE id = ?', [messageId]);
+    res.json({ message: 'Message deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==================== WEBSOCKET EVENTS ====================
 
 io.on('connection', (socket) => {
