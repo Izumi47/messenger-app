@@ -101,10 +101,10 @@ ngrok http --domain=thrush-close-civet.ngrok-free.app 3000  # Terminal 2
 
 ### Key Features
 - **Message Management**: Delete individual messages via context menu
-- **Batch Deletion**: Select multiple messages at once for bulk deletion
+- **Batch Deletion**: Select multiple sent messages at once for bulk deletion
 - **Message Actions**: Long-press (mobile) or right-click (desktop) for copy/delete options
 - **Theme Support**: Full dark mode and accessibility options
-- **Real-time Sync**: All actions sync across open browser tabs/devices instantly
+- **Real-time Sync**: Messaging and deletions sync across devices instantly
 
 ### Database
 - **SQLite3** - `messages.db`

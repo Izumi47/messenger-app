@@ -85,9 +85,10 @@ Welcome! You have a complete, private messaging app. Here's what to read in orde
 ### Message Management
 Your messenger now includes powerful message management features:
 - **Delete Messages**: Remove individual messages (right-click/long-press)
-- **Batch Operations**: Select multiple messages at once and delete them together
+- **Batch Operations**: Select multiple sent messages at once and delete them together
 - **Copy Messages**: Easily copy message text to clipboard
 - **Selection Mode**: Enable multi-select via the ⋮ button in chat header
+- **Realtime Sync**: Deletions update instantly for both users
 
 ### "Want maximum security"
 → Read: DEPLOYMENT.md Method 3 (VPN)

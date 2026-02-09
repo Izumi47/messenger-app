@@ -78,10 +78,12 @@ npm audit fix
 **Single message:**
 - Desktop: Right-click on message → Copy or Delete
 - Mobile: Long-press (hold) on message → Copy or Delete
+   - Only your sent messages can be deleted
+   - Deletions sync instantly for both users
 
 **Multiple messages:**
 1. Click the **⋮** (three dots) button in chat header
-2. Checkboxes appear next to all messages
+2. Checkboxes appear next to your **sent** messages
 3. Click checkboxes to select messages
 4. Use toolbar options:
    - **Select All** - Mark all messages

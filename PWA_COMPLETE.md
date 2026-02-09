@@ -6,6 +6,7 @@ Your messenger app is now a **full Progressive Web App (PWA)** with:
 ✅ **Notifications** - Alerts while app is open or in background
 ✅ **Offline Support** - View cached messages without internet
 ✅ **Cross-Platform** - Works on Android, iPhone, and desktop
+✅ **Realtime Delete Sync** - Message deletions update instantly for both users
 
 ---
 
@@ -57,6 +58,10 @@ When you receive a message:
 - **App in background:** Notification appears in system tray
 - **App fully closed:** No notification (requires Web Push - future enhancement)
 - **Tap notification:** App opens and loads conversation
+
+**Deletion behavior:**
+- Deletions sync instantly for both users
+- Only messages you sent can be deleted
 
 ---
 

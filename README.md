@@ -10,8 +10,9 @@ A completely private, self-hosted messaging application built with Node.js, Expr
 ✅ **Password Security** - Bcrypt hashing for all passwords
 ✅ **One-on-One Chat** - Private conversations between users
 ✅ **Message History** - Full conversation persistence
-✅ **Message Management** - Delete individual or multiple messages at once
+✅ **Message Management** - Delete individual or multiple sent messages at once
 ✅ **Message Actions** - Long-press context menu to copy or delete messages
+✅ **Realtime Delete Sync** - Message deletions update instantly for both users
 ✅ **Easy Deployment** - Simple setup for home server or VPS
 ✅ **PWA Notifications** - Works while app is open or in background (closed app requires Web Push)
 
@@ -95,6 +96,7 @@ You should see:
    - Type message in the input box
    - Press Enter or click Send
    - Messages appear in real-time
+   - Deletions sync instantly on both sides
 
 ## Architecture
 

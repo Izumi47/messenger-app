@@ -20,6 +20,10 @@ This guide covers setting up your messenger app for remote access while maintain
 
 **To use:** Just run `start.bat` and share `https://thrush-close-civet.ngrok-free.app` with anyone!
 
+**Behavior notes:**
+- Message deletions sync instantly for both users
+- Only messages you sent can be deleted
+
 ---
 
 ## Alternative Deployment Methods

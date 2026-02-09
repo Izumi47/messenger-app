@@ -12,6 +12,7 @@ Your messenger app is now a **Progressive Web App (PWA)**! This means it can be 
 ✅ **Offline Support** - Access cached messages when internet is down
 ✅ **Home Screen Install** - Add app to home screen (Android & iPhone)
 ✅ **Auto-login** - Disabled (always shows login screen for security)
+✅ **Realtime Deletion Sync** - Message deletions update instantly for both users
 
 ---
 
@@ -67,6 +68,10 @@ When someone sends you a message:
 2. **If app is in background** → You'll get a system notification
 3. **If app is fully closed** → No notification (requires Web Push - future enhancement)
 4. **Tap notification** → App opens and loads the conversation
+
+**Deletion behavior:**
+- Deletions sync instantly for both users
+- Only messages you sent can be deleted
 
 ### Enable Notifications
 

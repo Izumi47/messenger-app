@@ -89,8 +89,9 @@ http://localhost:3000
 
 ### Message Management
 - **Delete individual messages**: Right-click (desktop) or long-press (mobile) on a message
-- **Batch delete**: Click the ⋮ button in chat header to enable multi-select mode
+- **Batch delete**: Click the ⋮ button in chat header to enable multi-select mode (sent messages only)
 - **Copy messages**: Available in the context menu (right-click or long-press)
+- **Realtime sync**: Deletions update instantly for both users
 
 ---
 
