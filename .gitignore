@@ -10,6 +10,7 @@ messages.db
 .env
 .env.local
 .env.*.local
+vapid.json
 
 # Backups
 *.backup

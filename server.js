@@ -5,7 +5,9 @@ const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 const path = require('path');
+const webpush = require('web-push');
 require('dotenv').config();
 
 const app = express();
@@ -35,6 +37,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 const DB_PATH = './messages.db';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@example.com';
+const VAPID_PATH = path.join(__dirname, 'vapid.json');
+
+function loadOrCreateVapidKeys() {
+  if (fs.existsSync(VAPID_PATH)) {
+    return JSON.parse(fs.readFileSync(VAPID_PATH, 'utf8'));
+  }
+
+  const keys = webpush.generateVAPIDKeys();
+  fs.writeFileSync(VAPID_PATH, JSON.stringify(keys, null, 2));
+  console.log('✅ Generated new VAPID keys');
+  return keys;
+}
+
+const vapidKeys = loadOrCreateVapidKeys();
+webpush.setVapidDetails(VAPID_SUBJECT, vapidKeys.publicKey, vapidKeys.privateKey);
 
 // Initialize SQLite Database
 const db = new sqlite3.Database(DB_PATH, (err) => {
@@ -74,6 +92,55 @@ const dbAll = (sql, params = []) => {
   });
 };
 
+const saveSubscription = async (userId, subscription) => {
+  const { endpoint, keys } = subscription;
+  if (!endpoint || !keys?.p256dh || !keys?.auth) {
+    throw new Error('Invalid subscription payload');
+  }
+
+  await dbRun(
+    `INSERT OR REPLACE INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+     VALUES (?, ?, ?, ?)` ,
+    [userId, endpoint, keys.p256dh, keys.auth]
+  );
+};
+
+const removeSubscription = async (endpoint) => {
+  await dbRun('DELETE FROM push_subscriptions WHERE endpoint = ?', [endpoint]);
+};
+
+const sendPushToUser = async (userId, payload) => {
+  const subscriptions = await dbAll(
+    'SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?',
+    [userId]
+  );
+
+  if (!subscriptions.length) {
+    return;
+  }
+
+  const message = JSON.stringify(payload);
+
+  await Promise.all(
+    subscriptions.map(async (sub) => {
+      const subscription = {
+        endpoint: sub.endpoint,
+        keys: { p256dh: sub.p256dh, auth: sub.auth }
+      };
+
+      try {
+        await webpush.sendNotification(subscription, message);
+      } catch (err) {
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          await removeSubscription(sub.endpoint);
+        } else {
+          console.error('Web Push error:', err.message);
+        }
+      }
+    })
+  );
+};
+
 // Initialize Database Tables
 async function initializeDatabase() {
   try {
@@ -95,6 +162,18 @@ async function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(from_user_id) REFERENCES users(id),
         FOREIGN KEY(to_user_id) REFERENCES users(id)
+      )
+    `);
+
+    await dbRun(`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        endpoint TEXT UNIQUE NOT NULL,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id)
       )
     `);
 
@@ -171,6 +250,35 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+// ==================== WEB PUSH ROUTES ====================
+
+app.get('/api/push/public-key', (req, res) => {
+  res.json({ publicKey: vapidKeys.publicKey });
+});
+
+app.post('/api/push/subscribe', verifyToken, async (req, res) => {
+  try {
+    const { subscription } = req.body;
+    await saveSubscription(req.userId, subscription);
+    res.json({ message: 'Subscription saved' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/push/unsubscribe', verifyToken, async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+    if (!endpoint) {
+      return res.status(400).json({ error: 'Endpoint required' });
+    }
+    await removeSubscription(endpoint);
+    res.json({ message: 'Subscription removed' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==================== MESSAGE ROUTES ====================
 
 // Get all users
@@ -208,6 +316,19 @@ app.post('/api/messages', verifyToken, async (req, res) => {
       'INSERT INTO messages (from_user_id, to_user_id, content) VALUES (?, ?, ?)',
       [req.userId, toUserId, content]
     );
+
+    await sendPushToUser(toUserId, {
+      title: `💬 ${req.username}`,
+      body: content?.substring(0, 100) || 'New message',
+      icon: '/icon-192.svg',
+      badge: '/icon-192.svg',
+      tag: `message-${req.userId}`,
+      data: {
+        fromUserId: req.userId,
+        username: req.username,
+        url: '/'
+      }
+    });
 
     res.json({ message: 'Message sent' });
   } catch (err) {
@@ -251,6 +372,19 @@ io.on('connection', (socket) => {
         toUserId,
         content,
         timestamp: new Date().toISOString()
+      });
+
+      await sendPushToUser(toUserId, {
+        title: `💬 ${socket.username}`,
+        body: content?.substring(0, 100) || 'New message',
+        icon: '/icon-192.svg',
+        badge: '/icon-192.svg',
+        tag: `message-${socket.userId}`,
+        data: {
+          fromUserId: socket.userId,
+          username: socket.username,
+          url: '/'
+        }
       });
 
       // Confirm to sender

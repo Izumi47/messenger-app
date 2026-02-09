@@ -7,6 +7,131 @@ let token = null;
 // Use the same origin as the page (handles http/https and ports automatically)
 const API_URL = window.location.origin;
 
+// ==================== THEME ====================
+
+const THEME_STORAGE_KEY = 'theme';
+const ACCESSIBILITY_STORAGE_KEY = 'accessibility';
+
+function applyTheme(mode) {
+  const isDark = mode === 'dark';
+  document.body.classList.toggle('dark-mode', isDark);
+
+  const toggleButtons = document.querySelectorAll('[data-theme-toggle], #themeToggleBtn');
+  toggleButtons.forEach((toggleBtn) => {
+    toggleBtn.textContent = isDark ? '☀️' : '🌙';
+    toggleBtn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+  });
+
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) {
+    themeMeta.setAttribute('content', isDark ? '#1f2430' : '#667eea');
+  }
+}
+
+function initTheme() {
+  const saved = localStorage.getItem(THEME_STORAGE_KEY);
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+}
+
+function toggleTheme() {
+  const nextMode = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+  localStorage.setItem(THEME_STORAGE_KEY, nextMode);
+  applyTheme(nextMode);
+}
+
+// ==================== ACCESSIBILITY ====================
+
+const defaultAccessibility = {
+  textSize: 'medium',
+  reduceMotion: false,
+  highContrast: false,
+  compactMode: false
+};
+
+function loadAccessibilitySettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ACCESSIBILITY_STORAGE_KEY));
+    return { ...defaultAccessibility, ...(saved || {}) };
+  } catch (err) {
+    return { ...defaultAccessibility };
+  }
+}
+
+function saveAccessibilitySettings(settings) {
+  localStorage.setItem(ACCESSIBILITY_STORAGE_KEY, JSON.stringify(settings));
+}
+
+function applyAccessibilitySettings(settings) {
+  document.body.classList.remove('text-small', 'text-medium', 'text-large');
+  document.body.classList.add(`text-${settings.textSize}`);
+
+  document.body.classList.toggle('reduce-motion', settings.reduceMotion);
+  document.body.classList.toggle('high-contrast', settings.highContrast);
+  document.body.classList.toggle('compact-mode', settings.compactMode);
+
+  const textSizeSelect = document.getElementById('textSizeSelect');
+  if (textSizeSelect) {
+    textSizeSelect.value = settings.textSize;
+  }
+
+  const reduceMotionToggle = document.getElementById('reduceMotionToggle');
+  if (reduceMotionToggle) {
+    reduceMotionToggle.checked = settings.reduceMotion;
+  }
+
+  const highContrastToggle = document.getElementById('highContrastToggle');
+  if (highContrastToggle) {
+    highContrastToggle.checked = settings.highContrast;
+  }
+
+  const compactModeToggle = document.getElementById('compactModeToggle');
+  if (compactModeToggle) {
+    compactModeToggle.checked = settings.compactMode;
+  }
+}
+
+function initAccessibilityControls() {
+  const settings = loadAccessibilitySettings();
+  applyAccessibilitySettings(settings);
+
+  const textSizeSelect = document.getElementById('textSizeSelect');
+  if (textSizeSelect) {
+    textSizeSelect.addEventListener('change', (event) => {
+      settings.textSize = event.target.value;
+      saveAccessibilitySettings(settings);
+      applyAccessibilitySettings(settings);
+    });
+  }
+
+  const reduceMotionToggle = document.getElementById('reduceMotionToggle');
+  if (reduceMotionToggle) {
+    reduceMotionToggle.addEventListener('change', (event) => {
+      settings.reduceMotion = event.target.checked;
+      saveAccessibilitySettings(settings);
+      applyAccessibilitySettings(settings);
+    });
+  }
+
+  const highContrastToggle = document.getElementById('highContrastToggle');
+  if (highContrastToggle) {
+    highContrastToggle.addEventListener('change', (event) => {
+      settings.highContrast = event.target.checked;
+      saveAccessibilitySettings(settings);
+      applyAccessibilitySettings(settings);
+    });
+  }
+
+  const compactModeToggle = document.getElementById('compactModeToggle');
+  if (compactModeToggle) {
+    compactModeToggle.addEventListener('change', (event) => {
+      settings.compactMode = event.target.checked;
+      saveAccessibilitySettings(settings);
+      applyAccessibilitySettings(settings);
+    });
+  }
+}
+
 // ==================== AUTH ====================
 
 function toggleForms() {
@@ -91,6 +216,8 @@ async function login() {
 
     // Load users
     await loadUsers();
+
+    await subscribeToPushNotifications();
   } catch (err) {
     showError('loginError', 'Network error: ' + err.message);
   }
@@ -101,6 +228,8 @@ function logout() {
   token = null;
   currentUser = null;
   selectedUserId = null;
+
+  unsubscribeFromPushNotifications();
   
   // Clear saved credentials
   localStorage.removeItem('token');
@@ -122,6 +251,86 @@ function showError(elementId, message, type = 'error') {
     el.textContent = message;
     el.style.color = '#e74c3c';
   }
+}
+
+// ==================== WEB PUSH ====================
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+
+  return outputArray;
+}
+
+async function subscribeToPushNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return;
+  }
+
+  if (Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+
+  if (Notification.permission !== 'granted') {
+    return;
+  }
+
+  const registration = await navigator.serviceWorker.ready;
+  let subscription = await registration.pushManager.getSubscription();
+
+  if (!subscription) {
+    const keyResponse = await fetch(`${API_URL}/api/push/public-key`);
+    const keyData = await keyResponse.json();
+    const applicationServerKey = urlBase64ToUint8Array(keyData.publicKey);
+
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey
+    });
+  }
+
+  await fetch(`${API_URL}/api/push/subscribe`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ subscription })
+  });
+}
+
+async function unsubscribeFromPushNotifications() {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.getSubscription();
+
+  if (!subscription) {
+    return;
+  }
+
+  try {
+    await fetch(`${API_URL}/api/push/unsubscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ endpoint: subscription.endpoint })
+    });
+  } catch (err) {
+    console.warn('Push unsubscribe failed:', err.message);
+  }
+
+  await subscription.unsubscribe();
 }
 
 // ==================== SOCKET.IO ====================
@@ -309,13 +518,19 @@ async function sendMessage() {
 // Check if already logged in (disabled - always show login screen)
 // Uncomment below to enable auto-login if you want to stay logged in
 window.addEventListener('load', () => {
+  initAccessibilityControls();
+  initTheme();
+  document.querySelectorAll('[data-theme-toggle], #themeToggleBtn').forEach((button) => {
+    button.addEventListener('click', toggleTheme);
+  });
+
   const savedToken = localStorage.getItem('token');
   if (savedToken) {
     token = savedToken;
     currentUser = JSON.parse(localStorage.getItem('currentUser'));
     initializeSocket();
     document.getElementById('authScreen').classList.add('hidden');
-    loadUsers();
+    loadUsers().then(() => subscribeToPushNotifications());
   }
 });
 
@@ -358,6 +573,7 @@ login = async function() {
     initializeSocket();
     document.getElementById('authScreen').classList.add('hidden');
     await loadUsers();
+    await subscribeToPushNotifications();
   } catch (err) {
     showError('loginError', 'Network error: ' + err.message);
   }
